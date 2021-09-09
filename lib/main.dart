@@ -11,6 +11,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Startup Name Generator',
+      theme: ThemeData(
+        primaryColor: Colors.grey,
+      ),
       home: RandomWords(),
     );
   }
@@ -25,7 +28,36 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[]; // NEW
+  final _saved = <WordPair>[]; //NEW
   final _biggerFont = const TextStyle(fontSize: 18); // NEW
+
+  void _pushSaved() {
+    Navigator.of(context).push(
+        //New line from here
+        MaterialPageRoute<void>(builder: (BuildContext context) {
+      final tiles = _saved.map(
+        (WordPair pair) {
+          return ListTile(
+            title: Text(
+              pair.asPascalCase,
+              style: _biggerFont,
+            ),
+          );
+        },
+      );
+
+      final divide = tiles.isNotEmpty
+          ? ListTile.divideTiles(tiles: tiles, context: context).toList()
+          : <Widget>[];
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("Saved Suggestions"),
+        ),
+        body: ListView(children: divide),
+      );
+    }));
+  }
 
   Widget _buildSuggestions() {
     return ListView.builder(
@@ -61,11 +93,27 @@ class _RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(WordPair pair) {
+    final alreadySaved = _saved.contains(pair); //NEW
     return ListTile(
       title: Text(
         pair.asPascalCase,
         style: _biggerFont,
       ),
+      trailing: Icon(
+        //NEW from here ...
+        alreadySaved ? Icons.favorite : Icons.favorite_border,
+        color: alreadySaved ? Colors.red : null,
+      ), //to here
+      onTap: () {
+        //new lines
+        setState(() {
+          if (alreadySaved) {
+            _saved.remove(pair);
+          } else {
+            _saved.add(pair);
+          }
+        }); //to here
+      },
     );
   }
 
@@ -77,6 +125,7 @@ class _RandomWordsState extends State<RandomWords> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Startup Name Generator"),
+        actions: [IconButton(onPressed: _pushSaved, icon: Icon(Icons.list))],
       ),
       body: _buildSuggestions(),
     );
